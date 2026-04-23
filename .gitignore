@@ -1,0 +1,9 @@
+.build/
+.swiftpm/
+*.xcodeproj/
+EmojiKeycode.app/
+DerivedData/
+.DS_Store
+Package.resolved
+assets/AppIcon.icns
+assets/AppIcon.iconset/
