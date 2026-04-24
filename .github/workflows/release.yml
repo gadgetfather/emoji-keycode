@@ -1,0 +1,95 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g. v0.2.0). Must already exist, or will be created pointing at the workflow run commit.'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & release
+    runs-on: macos-14
+    env:
+      DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Print toolchain
+        run: |
+          xcode-select -p
+          swift --version
+
+      - name: Ensure jq
+        run: |
+          if ! command -v jq >/dev/null 2>&1; then
+            brew install jq
+          fi
+
+      - name: Resolve version
+        id: version
+        run: |
+          if [ -n "${{ inputs.tag }}" ]; then
+            echo "tag=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate emoji database
+        run: bash scripts/build-emoji-db.sh
+
+      - name: Run tests
+        run: swift test
+
+      - name: Build app bundle
+        run: make app
+
+      - name: Package artifact
+        id: package
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          ZIP="EmojiKeycode-${TAG}-macos.zip"
+          ditto -c -k --keepParent EmojiKeycode.app "$ZIP"
+          shasum -a 256 "$ZIP" | tee "${ZIP}.sha256"
+          echo "zip=$ZIP" >> "$GITHUB_OUTPUT"
+          echo "sha=${ZIP}.sha256" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve release notes
+        id: notes
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          NOTES_FILE="RELEASE_NOTES_${TAG}.md"
+          if [ -f "$NOTES_FILE" ]; then
+            echo "file=$NOTES_FILE" >> "$GITHUB_OUTPUT"
+          else
+            echo "file=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create or update release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          ZIP="${{ steps.package.outputs.zip }}"
+          SHA="${{ steps.package.outputs.sha }}"
+          NOTES="${{ steps.notes.outputs.file }}"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG exists; uploading artifacts (overwrite)."
+            gh release upload "$TAG" "$ZIP" "$SHA" --clobber
+          else
+            echo "Creating release $TAG."
+            if [ -n "$NOTES" ]; then
+              gh release create "$TAG" "$ZIP" "$SHA" --title "$TAG" --notes-file "$NOTES"
+            else
+              gh release create "$TAG" "$ZIP" "$SHA" --title "$TAG" --generate-notes
+            fi
+          fi
