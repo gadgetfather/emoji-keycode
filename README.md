@@ -10,6 +10,13 @@
   Works system-wide. Menu-bar only. No clipboard. No telemetry.
 </p>
 
+<p align="center">
+  <a href="https://github.com/gadgetfather/emoji-keycode/releases/latest"><img src="https://img.shields.io/github/v/release/gadgetfather/emoji-keycode?display_name=tag&amp;label=download&amp;color=FDB515" alt="Latest release"/></a>
+  <img src="https://img.shields.io/badge/macOS-13%2B-3B6EF2" alt="macOS 13+"/>
+  <a href="https://github.com/gadgetfather/emoji-keycode/stargazers"><img src="https://img.shields.io/github/stars/gadgetfather/emoji-keycode?style=flat&amp;color=8B4FF5" alt="Stars"/></a>
+  <a href="https://buymeacoffee.com/gadgetfather"><img src="https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?logo=buymeacoffee&amp;logoColor=black" alt="Buy me a coffee"/></a>
+</p>
+
 ---
 
 ## What it does
@@ -167,6 +174,10 @@ Sources/EmojiKeycode/
 ## Privacy
 
 Everything runs locally. Keystrokes pass through the event tap in memory and are discarded — not stored, not logged, not transmitted. No network calls are ever made. The emoji database is bundled at build time.
+
+## Support
+
+If EmojiKeycode saved you a trip to the picker, [buy me a coffee ☕](https://buymeacoffee.com/gadgetfather). Keeps the project alive, no strings attached.
 
 ## Credits
 
